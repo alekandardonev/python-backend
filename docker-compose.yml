@@ -1,0 +1,36 @@
+version: '3.8'
+
+services:
+  api:
+    build: ./backend
+    volumes:
+      - ./backend:/code
+    ports:
+      - "8080:80"
+    secrets:
+      - api_env_file
+  webapp:
+    build:
+      context: ./app
+      dockerfile: ./webapp.Dockerfile
+    environment:
+      REACT_APP_API_ENDPOINT: "https://api.bng.damodar.dev/api"
+    volumes:
+      - ./app:/usr/src/app
+    ports:
+      - "8081:80"
+  admin-panel:
+    build:
+      context: ./app
+      dockerfile: ./admin-panel.Dockerfile
+    environment:
+      REACT_APP_API_ENDPOINT: "https://api.bng.damodar.dev/api"
+    volumes:
+      - ./app:/usr/src/app
+    ports:
+      - "8082:80"
+
+secrets:
+  api_env_file:
+    file: secrets.env
+
