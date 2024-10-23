@@ -1,0 +1,42 @@
+version: 2.1
+
+orbs:
+  node: circleci/node@4.0.0
+
+jobs:
+  app-test:
+    working_directory: ~/bng
+    executor: node/default
+    steps:
+      - checkout
+      - node/install-packages:
+          app-dir: ./app
+          override-ci-command: npm install
+      - run: cd app && npm run test
+      - run: cd app && npm run lint
+
+  backend-test:
+    working_directory: ~/bng
+    docker:
+      - image: circleci/python:3.8.5
+    steps:
+        - checkout
+        - run: |
+            cd backend
+            python3 -m venv venv
+            . venv/bin/activate
+            pip install -r requirements.txt
+        - save_cache:
+            key: deps1-{{ .Branch }}-{{ checksum "backend/requirements.txt" }}
+            paths:
+              - "venv"
+        - run: |
+            cd backend
+            . venv/bin/activate
+            python3 manage.py migrate --settings=api.tests.settings
+            python3 manage.py test --settings=api.tests.settings
+workflows:
+  tests:
+    jobs:
+      - backend-test
+      - app-test
